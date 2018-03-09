@@ -15,9 +15,12 @@ enum MyError: Error {
 
 class ViewController: UIViewController {
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-       
+    enum MyError: Error {
+        case anError
+    }
+    
+    
+    fileprivate func charperOne() {
         example(of: "just, of, from") {
             // 1
             let one = 1
@@ -61,7 +64,7 @@ class ViewController: UIViewController {
                     // 1
                     onNext: { element in
                         print(element)
-                    },
+                },
                     // 2
                     onCompleted: {
                         print("Completed")
@@ -81,7 +84,7 @@ class ViewController: UIViewController {
                     onCompleted: {
                         print("Completed")
                 })
-            .disposed(by: disposeBag)
+                .disposed(by: disposeBag)
         }
         
         
@@ -106,7 +109,7 @@ class ViewController: UIViewController {
                 // 3
                 print(event)
             }
-             subscription.dispose()
+            subscription.dispose()
         }
         
         example(of: "DisposeBag") {
@@ -126,23 +129,23 @@ class ViewController: UIViewController {
                 // 1
                 observer.onNext("1")
                 // 2
-               // observer.onError(MyError.anError)
+                // observer.onError(MyError.anError)
                 
-               // observer.onCompleted()
+                // observer.onCompleted()
                 // 3
                 observer.onNext("?")
                 // 4
                 
                 return Disposables.create()
-            }
-            .subscribe(
-                onNext: { print($0) },
-                onError: { print($0) },
-                onCompleted: { print("Completed") },
-                onDisposed: { print("Disposed") }
+                }
+                .subscribe(
+                    onNext: { print($0) },
+                    onError: { print($0) },
+                    onCompleted: { print("Completed") },
+                    onDisposed: { print("Disposed") }
             )
-           // .addDisposableTo(disposeBag)
-        
+            // .addDisposableTo(disposeBag)
+            
         }
         
         
@@ -170,11 +173,158 @@ class ViewController: UIViewController {
                 
             }
         }
+    }
+    
+    func charperTwoSubjects() {
+        example(of: "PublishSubject") {
+            let subject = PublishSubject<String>()
+            subject.onNext("Is anyone listening?")
+            
+            let subscriptionOne = subject
+                .subscribe(onNext: { string in
+                    print(string)
+                })
+            
+            subject.on(.next("1"))
+            subject.onNext("2")
+            
+            let subscriptionTwo = subject
+                .subscribe { event in
+                    print("2)", event.element ?? event)
+            }
+            
+            subject.onNext("3")
+            subscriptionOne.dispose()
+            subject.onNext("4")
+            
+            // subscription 2 is cancelled in this moment
+            subject.onCompleted()
+            // 2
+            subject.onNext("5")
+            // 3
+            subscriptionTwo.dispose()
+            let disposeBag = DisposeBag()
+            // 4
+            subject
+                .subscribe {
+                    print("3)", $0.element ?? $0)
+                }
+                .disposed(by: disposeBag)
+            
+            _ = subject
+                .subscribe { event in
+                    print("4)", event.element ?? event)
+            }
+            
+            
+            subject.onNext("?")
+        }
+        
+        
+        // 1
+      
+        // 2
+        //        func print<T: CustomStringConvertible>(label: String, event: Event<T>) {
+        //            print(label: label, event: event.element ?? event.error ?? event)
+        //        }
+        
+        // BehaviorSubject is equals to PublishSubject, but it show the last subject
+        example(of: "BehaviorSubject") {
+            // 4
+            let subject = BehaviorSubject(value: "Initial value")
+            let disposeBag = DisposeBag()
+            subject
+                .subscribe {
+                    self.printaum(label: "1)", event: $0)
+                }
+                .disposed(by: disposeBag)
+            
+            subject.onNext("X")
+            
+            // 1
+            subject.onError(MyError.anError)
+            // 2
+            subject
+                .subscribe {
+                    self.printaum(label: "2)", event: $0)
+                }
+                .disposed(by: disposeBag)
+            
+        }
+        
+        
+        example(of: "ReplaySubject") {
+            // 1
+            let subject = ReplaySubject<String>.create(bufferSize: 2)
+            let disposeBag = DisposeBag()
+            // 2
+            subject.onNext("1")
+            subject.onNext("2")
+            subject.onNext("3")
+            // 3
+            subject
+                .subscribe {
+                    self.printaum(label: "1)", event: $0)
+                }
+                .disposed(by: disposeBag)
+            subject
+                .subscribe {
+                    self.printaum(label: "2)", event: $0)
+                }
+                .disposed(by: disposeBag)
+            
+            subject.onNext("4")
+            
+            subject.onError(MyError.anError) //termina a observacao
+            
+            subject
+                .subscribe {
+                    self.printaum(label: "3)", event: $0)
+                }.disposed(by: disposeBag)
+        }
+        
+        
+        example(of: "Variable") {
+            // 1
+            let variable = Variable("Initial value")
+            let disposeBag = DisposeBag()
+            // 2
+            variable.value = "New initial value"
+            // 3
+            variable.asObservable()
+                .subscribe {
+                    self.printaum(label: "1)", event: $0)
+                }
+                .disposed(by: disposeBag)
+            
+            // 1
+            variable.value = "1"
+            // 2
+            variable.asObservable()
+                .subscribe {
+                    self.printaum(label: "2)", event: $0)
+                }
+                .disposed(by: disposeBag)
+            // 3
+            variable.value = "2"
+        }
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+       
+        //charperOne()
+        
+        //charperTwoSubjects()
         
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
+    }
+    
+    public func printaum<T: CustomStringConvertible>(label: String, event: Event<T>) {
+        print(label, event.element ?? event.error ?? event)
     }
     
     public func example(of description: String, action: () -> Void) {
