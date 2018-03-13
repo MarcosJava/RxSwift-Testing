@@ -15,22 +15,35 @@ enum MyError: Error {
 
 class ViewController: UIViewController {
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        charperOneBasics()
+        
+        //charperTwoSubjects()
+        
+        //charperThreeFilterOperations()
+        
+    }
+
+    
+    
     enum MyError: Error {
         case anError
     }
     
     
-    fileprivate func charperOne() {
+    fileprivate func charperOneBasics() {
         example(of: "just, of, from") {
             // 1
             let one = 1
             let two = 2
             let three = 3
             // 2
-            let observable: Observable<Int> = Observable<Int>.just(one)
-            let observable2 = Observable.of(one, two, three)
-            let observable3 = Observable.of([one, two, three])
-            let observable4 = Observable.from([one, two, three])
+            let _: Observable<Int> = Observable<Int>.just(one) // envia apenas 1
+            let _ = Observable.of(one, two, three) //of envia varios .next
+            let _ = Observable.of([one, two, three]) //of esta enviando um array
+            let _ = Observable.from([one, two, three]) // from envia apenas um object, from usado para enviar array
         }
         
         let sequence = 0..<3
@@ -39,112 +52,109 @@ class ViewController: UIViewController {
             print(n)
         }
         
-        example(of: "subscribe") {
+        example(of: "subscribe") { //Pega os elementos e sua finalizacao
             let one = 1
             let two = 2
             let three = 3
             let observable = Observable.of(one, two, three)
             
-            //            observable.subscribe { event in
-            //                if let element = event.element {
-            //                    print(element)
-            //                }
-            //            }
+            observable.subscribe { event in
+                if let element = event.element {
+                    print("event.element: \(element)")
+                }
+            }.disposed(by: DisposeBag())
             
             observable.subscribe(onNext: { element in
-                print(element)
-            })
+                print("element: \(element)")
+            }).disposed(by: DisposeBag())
         }
         
         
-        example(of: "empty") {
+        example(of: "empty") { //Emite um evento fazio, apenas com .onComplete
             let observable = Observable<Void>.empty()
             observable
-                .subscribe(
-                    // 1
-                    onNext: { element in
+                .subscribe(onNext: { element in
                         print(element)
-                },
-                    // 2
-                    onCompleted: {
+                },onCompleted: {
                         print("Completed")
-                })
+                }).disposed(by: DisposeBag())
         }
         
+        //never: faz nada, não emite nenhum evento e nem recebe nada
         example(of: "never") {
             let disposeBag = DisposeBag()
             let observable = Observable<Void>.never()
-            observable
-                .subscribe(
-                    // 1
-                    onNext: { element in
+            
+            observable.subscribe(
+                onNext: { element in
                         print(element)
-                },
-                    // 2
-                    onCompleted: {
+                },onCompleted: {
                         print("Completed")
                 })
                 .disposed(by: disposeBag)
         }
         
-        
+        //range:  Cria um foreach para emitir evento
         example(of: "range") {
-            // 1
+            
             let observable = Observable<Int>.range(start: 1, count: 10)
             observable
                 .subscribe(onNext: { i in
-                    // 2
+                    
                     let n = Double(i)
                     let fibonacci = Int(((pow(1.61803, n) - pow(0.61803, n)) /
                         2.23606).rounded())
                     print(fibonacci)
-                })
+                }).disposed(by: DisposeBag())
         }
         
+        //dispose: Faz um DisposeBag
         example(of: "dispose") {
-            // 1
+            
             let observable = Observable.of("A", "B", "C")
-            // 2
             let subscription = observable.subscribe { event in
-                // 3
                 print(event)
             }
             subscription.dispose()
         }
         
+        //DisposeBag: coloca uma mochila de dispose, para desalocar da memoria quando acabar
+        // e não receber mais evento daquele subject ou observable
         example(of: "DisposeBag") {
-            // 1
+            
             let disposeBag = DisposeBag()
-            // 2
+            
             Observable.of("A", "B", "C")
-                .subscribe { // 3
+                .subscribe {
                     print($0) }
-                .disposed(by: disposeBag) // 4
+                .disposed(by: disposeBag)
             //@available(*, deprecated, message: "use disposed(by:) instead", renamed: "disposed(by:)")
         }
         
+        //create: Cria um observebled e um observer para ele msmo
         example(of: "create") {
             
             Observable<String>.create { observer in
-                // 1
                 observer.onNext("1")
-                // 2
-                // observer.onError(MyError.anError)
                 
-                // observer.onCompleted()
-                // 3
+                // finaliza com erro ou com complete
+                observer.onError(MyError.anError)
+                observer.onCompleted()
+                
+                //Depois de completar isso nao printa
                 observer.onNext("?")
-                // 4
                 
+                //SEmpre deve retornar um disposable, sempre desaloca
                 return Disposables.create()
                 }
+                //Get o return do Observable.create
                 .subscribe(
                     onNext: { print($0) },
                     onError: { print($0) },
                     onCompleted: { print("Completed") },
                     onDisposed: { print("Disposed") }
-            )
-            // .addDisposableTo(disposeBag)
+                ).disposed(by: DisposeBag())
+            
             
         }
         
@@ -177,6 +187,7 @@ class ViewController: UIViewController {
     
     func charperTwoSubjects() {
         example(of: "PublishSubject") {
+            //Fica publicando Subjects
             let subject = PublishSubject<String>()
             subject.onNext("Is anyone listening?")
             
@@ -254,7 +265,9 @@ class ViewController: UIViewController {
         
         
         example(of: "ReplaySubject") {
-            // 1
+            // Mesmo que os outros de cima, o unico problema é que ele guarda todos os eventos
+            // e dispara para os novos todos os eventos. Bom utiliza-lo com bufferSize: que limita
+            // a quantidade de eventos guardados
             let subject = ReplaySubject<String>.create(bufferSize: 2)
             let disposeBag = DisposeBag()
             // 2
@@ -283,7 +296,8 @@ class ViewController: UIViewController {
                 }.disposed(by: disposeBag)
         }
         
-        
+        //Variable: não tem .onCompleted e nem .onError apenas notifica todos qndo seu valor muda
+        // apenas existe .onNext
         example(of: "Variable") {
             // 1
             let variable = Variable("Initial value")
@@ -310,14 +324,61 @@ class ViewController: UIViewController {
         }
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-       
-        //charperOne()
+    fileprivate func charperThreeFilterOperations() {
         
-        //charperTwoSubjects()
+        //Ignora os elementos em .onNext , pegando apenas o final
+        // onCompleted e o onError.
+        example(of: "ignoreElements") {
+            let strikes = PublishSubject<String>()
+            let disposeBag = DisposeBag()
+            strikes.ignoreElements()
+                    .subscribe { _ in
+                        print("You're out!")
+                    }
+                    .disposed(by: disposeBag)
+            
+            strikes.onNext("X")
+            strikes.onNext("X")
+            strikes.onNext("X")
+            strikes.onCompleted()
+        }
+        
+        //elementAt: ignora todos no .onNext menos o da posicao do At,
+        // e pega tbm o onComplete e o onError
+        example(of: "elementAt") {
+            // 1
+            let strikes = PublishSubject<String>()
+            let disposeBag = DisposeBag()
+            // 2
+            strikes.elementAt(2)
+                    .subscribe(onNext: { _ in
+                        print("You're out!")
+                    })
+                    .disposed(by: disposeBag)
+            
+            strikes.onNext("X")
+            strikes.onNext("X")
+            strikes.onNext("X")
+        }
+        
+        //filter: coloca um filtro, onde,
+        // so passa no onNext, caso a condicação do filter for valida
+        example(of: "filter") {
+            let disposeBag = DisposeBag()
+            Observable.of(1, 2, 3, 4, 5, 6)
+                      .filter { integer in
+                            integer % 2 == 0
+                        }
+                        //So passa se passar pelo filtro no .subscribe
+                        .subscribe(onNext: {
+                            print($0)
+                        })
+                        .disposed(by: disposeBag)
+        }
+        
         
     }
+    
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
