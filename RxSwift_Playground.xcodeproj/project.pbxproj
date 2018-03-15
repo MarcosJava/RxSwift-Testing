@@ -13,6 +13,7 @@
 		1868CFA620366B6E00595ED0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1868CFA520366B6E00595ED0 /* Assets.xcassets */; };
 		1868CFA920366B6E00595ED0 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1868CFA720366B6E00595ED0 /* LaunchScreen.storyboard */; };
 		5509E43D609F84814A796E7D /* Pods_RxSwift_Playground.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 13C63FDDF2E3D210D273A292 /* Pods_RxSwift_Playground.framework */; };
+		CF3B76C3205B22FA00DE494F /* Student.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF3B76C2205B22FA00DE494F /* Student.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +26,7 @@
 		1868CFA820366B6E00595ED0 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1868CFAA20366B6E00595ED0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A233E2D465292AF3DC9DF5C1 /* Pods-RxSwift_Playground.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxSwift_Playground.release.xcconfig"; path = "Pods/Target Support Files/Pods-RxSwift_Playground/Pods-RxSwift_Playground.release.xcconfig"; sourceTree = "<group>"; };
+		CF3B76C2205B22FA00DE494F /* Student.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Student.swift; sourceTree = "<group>"; };
 		D6A3A08FD514B0478703A6FF /* Pods-RxSwift_Playground.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxSwift_Playground.debug.xcconfig"; path = "Pods/Target Support Files/Pods-RxSwift_Playground/Pods-RxSwift_Playground.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -67,6 +69,7 @@
 				1868CFA520366B6E00595ED0 /* Assets.xcassets */,
 				1868CFA720366B6E00595ED0 /* LaunchScreen.storyboard */,
 				1868CFAA20366B6E00595ED0 /* Info.plist */,
+				CF3B76C2205B22FA00DE494F /* Student.swift */,
 			);
 			path = RxSwift_Playground;
 			sourceTree = "<group>";
@@ -220,6 +223,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1868CFA120366B6E00595ED0 /* ViewController.swift in Sources */,
+				CF3B76C3205B22FA00DE494F /* Student.swift in Sources */,
 				1868CF9F20366B6E00595ED0 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

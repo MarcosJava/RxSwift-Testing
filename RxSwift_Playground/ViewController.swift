@@ -18,11 +18,13 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        charperOneBasics()
+        //charperOneBasics()
         
         //charperTwoSubjects()
         
         //charperThreeFilterOperations()
+        
+        charperTransformingOperations()
         
     }
 
@@ -376,6 +378,198 @@ class ViewController: UIViewController {
                         .disposed(by: disposeBag)
         }
         
+        //skip: Nao pega o valor dos proximos next de acordo com o numero
+        example(of: "skip") {
+            let disposeBag = DisposeBag()
+            
+            Observable.of("A", "B", "C", "D", "E", "F")
+                .skip(3)
+                .subscribe(onNext: {
+                    print($0) })
+                .disposed(by: disposeBag)
+        }
+        
+        //skipWhile: vai deixar skip até qndo a condição for valida,
+        // depois que for valida, vai passar todos
+        example(of: "skipWhile") {
+            let disposeBag = DisposeBag()
+            // 1
+            Observable.of(2, 2, 3, 4, 4)
+                // 2
+                .skipWhile { integer in
+                    integer % 2 == 0
+                }
+                .subscribe(onNext: {
+                    print($0)
+                })
+                .disposed(by: disposeBag)
+        }
+        
+        //skipUntil: Vai skipt até achar uma condição de poder exibir
+        example(of: "skipUntil") {
+            let disposeBag = DisposeBag()
+            // 1
+            let subject = PublishSubject<String>()
+            let trigger = PublishSubject<String>()
+            // 2
+            subject
+                .skipUntil(trigger)
+                .subscribe(onNext: {
+                    print($0) })
+                .disposed(by: disposeBag)
+            
+            subject.onNext("A")
+            subject.onNext("B")
+            trigger.onNext("X") //start print
+            subject.onNext("C")
+            subject.onNext("D")
+            trigger.onNext("Z")
+            subject.onNext("E")
+            subject.onNext("F")
+            trigger.onCompleted()
+            subject.onNext("G")
+            subject.onNext("H")
+        }
+        
+        //take: Pega os primeiros elementos até o index indicado
+        example(of: "take") {
+            let disposeBag = DisposeBag()
+            // 1
+            Observable.of(1, 2, 3, 4, 5, 6)
+                // 2
+                .take(3)
+                .subscribe(onNext: {
+                    print($0) })
+                .disposed(by: disposeBag)
+        }
+        
+        //takeWhile: é igual ao skipWhile sendo que ele não skip e sim take
+        //takeWhileWithIndex: faz extamente igual o takeWhile com index.
+        // vc pega o valor e seu index.
+        example(of: "takeWhileWithIndex") {
+            let disposeBag = DisposeBag()
+            
+            Observable.of(2, 2, 4, 4, 6, 6)
+                .takeWhileWithIndex { integer, index in
+                    integer % 2 == 0 && index < 3 //todos os pares abaixo do index 3
+                }
+                .subscribe(onNext: {
+                    print($0)
+                })
+                .disposed(by: disposeBag)
+        }
+        
+        //takeUntil: igual o skipUntil , sendo que o skipUntil eh para esquecer(skip)
+        // e o take é para pegar(take)
+        example(of: "takeUntil") {
+            let disposeBag = DisposeBag()
+            
+            let subject = PublishSubject<String>()
+            let trigger = PublishSubject<String>()
+            
+            subject
+                .takeUntil(trigger)
+                .subscribe(onNext: {
+                    print($0) })
+                .disposed(by: disposeBag)
+            
+            
+            subject.onNext("1")
+            subject.onNext("2")
+            trigger.onNext("X")
+            subject.onNext("3")
+        }
+        
+        //distinctUntilChanged: serve para nao repetir os valores sequencias
+        example(of: "distinctUntilChanged") {
+            let disposeBag = DisposeBag()
+            // 1
+            Observable.of("A", "A", "B", "B", "B", "A")
+                // 2
+                .distinctUntilChanged()
+                .subscribe(onNext: {
+                    print($0) })
+                .disposed(by: disposeBag)
+        }
+        
+        //distinctUntilChanged(_:): Usado qndo os .next não são Equatable (String são),
+        // os objetos devem ser tratados.
+        example(of: "distinctUntilChanged(_:)") {
+            let disposeBag = DisposeBag()
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .spellOut
+            
+            Observable<NSNumber>.of(10, 10, 10, 110, 20, 20, 200, 210, 310)
+                .distinctUntilChanged { a, b in
+                    
+                    guard let aWords = formatter.string(from: a)?.components(separatedBy: " "),
+                        let bWords = formatter.string(from: b)?.components(separatedBy: "")
+                            else {
+                            return false
+                    }
+                    var containsMatch = false
+                    // 5
+                    for aWord in aWords {
+                        for bWord in bWords {
+                            if aWord == bWord {
+                                containsMatch = true
+                                break
+                            } }
+                    }
+                    return containsMatch
+                }
+                
+                .subscribe(onNext: {
+                    print($0)
+                })
+                .disposed(by: disposeBag)
+        }
+        
+    }
+    
+    
+    func charperTransformingOperations() {
+        example(of: "toArray") {
+            let disposeBag = DisposeBag()
+            
+            
+            Observable.of("A", "B", "C")
+                .toArray()
+                .subscribe(onNext: {
+                    print($0) })
+                .disposed(by: disposeBag)
+        }
+        
+        example(of: "map") {
+            let disposeBag = DisposeBag()
+            
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .spellOut
+            
+            Observable<NSNumber>.of(123, 4, 56)
+                // 3
+                .map {
+                    formatter.string(from: $0) ?? ""
+                }
+                .subscribe(onNext: {
+                    print($0)
+                })
+                .disposed(by: disposeBag)
+        }
+        
+        example(of: "mapWithIndex") {
+            let disposeBag = DisposeBag()
+            // 1
+            Observable.of(1, 2, 3, 4, 5, 6)
+                // 2
+                .mapWithIndex { integer, index in
+                    index > 2 ? integer * 2 : integer
+                }
+                .subscribe(onNext: {
+                    print($0)
+                })
+                .disposed(by: disposeBag)
+        }
         
     }
     
