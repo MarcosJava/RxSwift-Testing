@@ -560,15 +560,40 @@ class ViewController: UIViewController {
         example(of: "mapWithIndex") {
             let disposeBag = DisposeBag()
             // 1
-            Observable.of(1, 2, 3, 4, 5, 6)
-                // 2
-                .mapWithIndex { integer, index in
-                    index > 2 ? integer * 2 : integer
-                }
+            Observable.of(1, 2, 3, 4, 5, 6).mapWithIndex({ integer, index in
+                index > 2 ? integer * 2 : integer
+                })
                 .subscribe(onNext: {
                     print($0)
                 })
                 .disposed(by: disposeBag)
+        }
+        
+        example(of: "flatMap") {
+            let disposeBag = DisposeBag()
+            // 1
+            let ryan = Student(score: Variable(80))
+            let charlotte = Student(score: Variable(90))
+            // 2
+            let student = PublishSubject<Student>()
+            // 3
+            student.asObservable()
+                .flatMap {
+                    $0.score.asObservable()
+                }
+                // 4
+                .subscribe(onNext: {
+                    print($0)
+                })
+                .disposed(by: disposeBag)
+            
+            student.onNext(ryan)
+            ryan.score.value = 85
+            
+            student.onNext(charlotte)
+            ryan.score.value = 95
+            charlotte.score.value = 100
+            
         }
         
     }
