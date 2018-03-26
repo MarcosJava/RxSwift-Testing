@@ -569,6 +569,7 @@ class ViewController: UIViewController {
                 .disposed(by: disposeBag)
         }
         
+        //flatMap: Adiciona os Subriscreb e qndo altera o valor , manda para todos
         example(of: "flatMap") {
             let disposeBag = DisposeBag()
             // 1
@@ -595,6 +596,33 @@ class ViewController: UIViewController {
             charlotte.score.value = 100
             
         }
+        
+        //flatMapLatest: So repassa a observacao do ultimo Observavel adicionado.
+        // serve mais para operacoes em Network, usado mais qndo vc vai buscar
+        // s, w, i, f, t , pegando sempre os ultimos valores e esquecendo os demais.
+        example(of: "flatMapLatest") {
+            let disposeBag = DisposeBag()
+            let ryan = Student(score: Variable(80))
+            let charlotte = Student(score: Variable(90))
+            let student = PublishSubject<Student>()
+            student.asObservable()
+                .flatMapLatest {
+                    $0.score.asObservable()
+                }
+                .subscribe(onNext: {
+                    print($0)
+                })
+                .disposed(by: disposeBag)
+            student.onNext(ryan)
+            ryan.score.value = 85
+            student.onNext(charlotte)
+            // 1
+            ryan.score.value = 95
+            charlotte.score.value = 100
+        }
+        
+        
+        
         
     }
     
