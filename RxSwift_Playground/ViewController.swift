@@ -18,16 +18,18 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //charperOneBasics()
+        charperOneBasics()
         
-        //charperTwoSubjects()
+        charperTwoSubjects()
         
-        //charperThreeFilterOperations()
+        charperThreeFilterOperations()
         
-        //charperTransformingOperations()
+        charperTransformingOperations()
         
         charperCombiningOperations()
         
+        
+        charperTimeBasedOperator()
     }
 
     
@@ -63,6 +65,7 @@ class ViewController: UIViewController {
             let observable = Observable.of(one, two, three)
             
             observable.subscribe { event in
+                print("event: \(event)")
                 if let element = event.element {
                     print("event.element: \(element)")
                 }
@@ -197,7 +200,7 @@ class ViewController: UIViewController {
             
             let subscriptionOne = subject
                 .subscribe(onNext: { string in
-                    print(string)
+                    print("subscriptionOne:\(string)")
                 })
             
             subject.on(.next("1"))
@@ -205,7 +208,7 @@ class ViewController: UIViewController {
             
             let subscriptionTwo = subject
                 .subscribe { event in
-                    print("2)", event.element ?? event)
+                    print("subscriptionTwo:", event.element ?? event)
             }
             
             subject.onNext("3")
@@ -270,7 +273,7 @@ class ViewController: UIViewController {
         
         example(of: "ReplaySubject") {
             // Mesmo que os outros de cima, o unico problema é que ele guarda todos os eventos
-            // e dispara para os novos todos os eventos. Bom utiliza-lo com bufferSize: que limita
+            // e dispara para os novos todos os eventos, menos error. Bom utiliza-lo com bufferSize: que limita
             // a quantidade de eventos guardados
             let subject = ReplaySubject<String>.create(bufferSize: 2)
             let disposeBag = DisposeBag()
@@ -380,7 +383,7 @@ class ViewController: UIViewController {
                         .disposed(by: disposeBag)
         }
         
-        //skip: Nao pega o valor dos proximos next de acordo com o numero
+        //skip: Apenas pega o valor dos proximos next de acordo com o numero
         example(of: "skip") {
             let disposeBag = DisposeBag()
             
@@ -425,10 +428,10 @@ class ViewController: UIViewController {
             trigger.onNext("X") //start print
             subject.onNext("C")
             subject.onNext("D")
-            trigger.onNext("Z")
+            trigger.onNext("Z") //doesnt stop
             subject.onNext("E")
             subject.onNext("F")
-            trigger.onCompleted()
+            trigger.onCompleted() // continue print
             subject.onNext("G")
             subject.onNext("H")
         }
@@ -516,7 +519,8 @@ class ViewController: UIViewController {
                             if aWord == bWord {
                                 containsMatch = true
                                 break
-                            } }
+                            }
+                        }
                     }
                     return containsMatch
                 }
@@ -547,9 +551,8 @@ class ViewController: UIViewController {
             
             let formatter = NumberFormatter()
             formatter.numberStyle = .spellOut
-            
+            formatter.locale = Locale(identifier: "pt_BR")
             Observable<NSNumber>.of(123, 4, 56)
-                // 3
                 .map {
                     formatter.string(from: $0) ?? ""
                 }
@@ -561,7 +564,7 @@ class ViewController: UIViewController {
         
         example(of: "mapWithIndex") {
             let disposeBag = DisposeBag()
-            // 1
+            
             Observable.of(1, 2, 3, 4, 5, 6).mapWithIndex({ integer, index in
                 index > 2 ? integer * 2 : integer
                 })
@@ -641,7 +644,7 @@ class ViewController: UIViewController {
         example(of: "Observable.concat") {
             // 1
             let first = Observable.of(1, 2, 3)
-            let second = Observable.of(4, 5, 6)
+            let second = Observable.of(4, 5, 6, 7, 8)
             // 2
             let observable = Observable.concat([first, second])
             observable.subscribe(onNext: { value in
@@ -712,17 +715,11 @@ class ViewController: UIViewController {
             let disposable = observable.subscribe(onNext: { value in
                 print(value)
             })
-            // 2
-            print("> Sending a value to Left")
             left.onNext("Hello,")
-            
-            print("> Sending a value to Right")
             right.onNext("world")
             
-            print("> Sending another value to Right")
             right.onNext("RxSwift")
             
-            print("> Sending another value to Left")
             left.onNext("Have a good day,")
             
             disposable.dispose()
@@ -741,7 +738,8 @@ class ViewController: UIViewController {
             }
             observable.subscribe(onNext: { value in
                 print(value)
-            }).disposed(by: DisposeBag())        }
+            }).disposed(by: DisposeBag())
+        }
         
         //zip: Sempre junta qndo tiverem os 2 valores, qndo tiverem os mesmos valores nos observaveis
         //exemplo: obs1 [0,1,2] e o obs2 [3,4] o obs1[2] não vai aparecer com o zip
@@ -769,7 +767,7 @@ class ViewController: UIViewController {
             let textField = PublishSubject<String>()
             // 2
             let observable = button.withLatestFrom(textField)
-            let disposable = observable.subscribe(onNext: { value in
+            _ = observable.subscribe(onNext: { value in
                 print(value)
             })
             // 3
@@ -788,7 +786,7 @@ class ViewController: UIViewController {
             // 2
             let observable = textField.sample(button)
             //let observable = button.withLatestFrom(textField)
-            let disposable = observable.subscribe(onNext: { value in
+            _ = observable.subscribe(onNext: { value in
                 print(value)
             })
             // 3
@@ -861,7 +859,7 @@ class ViewController: UIViewController {
             let observable = source.reduce(0, accumulator: +)
             observable.subscribe(onNext: { value in
                 print(value)
-            })
+            }).disposed(by: DisposeBag())
         }
         
         //scan: vai somando com o valor inicial e podendo intervir nas contas
@@ -870,9 +868,35 @@ class ViewController: UIViewController {
             let observable = source.scan(0, accumulator: +)
             observable.subscribe(onNext: { value in
                 print(value)
-            })
+            }).disposed(by: DisposeBag())
         }
     }
+    
+    
+    func charperTimeBasedOperator() {
+        let elementsPerSeconds = 1
+        let maxElements = 5
+        let replayedElements = 1
+        let replayDelay: TimeInterval = 3
+        
+//        let sourceObservable = Observable<Int>.create { observer in
+//            var value = 1
+//            
+//            DispatchSource.makeTimerSource().
+//            
+//            let time = DispatchSource.timer(interval: 1.0 / Double(elementsPerSeconds), queue: .main) {
+//                if value <= maxElements {
+//                    observer.onNext(value)
+//                    value += 1
+//                }
+//            }
+//            return Disposables.create {
+//                timer.suspend()
+//            }
+//        }
+        
+    }
+    
     
 
     override func didReceiveMemoryWarning() {
@@ -880,7 +904,8 @@ class ViewController: UIViewController {
     }
     
     public func printaum<T: CustomStringConvertible>(label: String, event: Event<T>) {
-        print(label, event.element ?? event.error ?? event)
+        guard let event: Event<T> = event else { return }
+        print(label, (event.element ?? event.error ?? "erro"))
     }
     
     public func example(of description: String, action: () -> Void) {
